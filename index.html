@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Female Anatomy — Real 3D (Educational)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    background:#0b0b0b;
+    overflow:hidden;
+}
+#info{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#ff9000;
+    font-family:Arial,sans-serif;
+    font-size:14px;
+    opacity:.8;
+}
+</style>
+</head>
+<body>
+
+<div id="info">Female Anatomy — Real 3D Model (Posterior View)</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
+
+<script>
+// === СЦЕНА ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0b0b);
+
+// === КАМЕРА ===
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0,1.6,4);
+
+// === РЕНДЕР ===
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.physicallyCorrectLights = true;
+document.body.appendChild(renderer.domElement);
+
+// === КОНТРОЛЫ ===
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0,1.2,0);
+controls.enableDamping = true;
+
+// === СВЕТ ===
+scene.add(new THREE.AmbientLight(0xffffff,0.35));
+
+const key = new THREE.DirectionalLight(0xffffff,1.0);
+key.position.set(3,5,4);
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xffffff,0.4);
+fill.position.set(-3,2,4);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xffffff,0.6);
+rim.position.set(0,2,-5);
+scene.add(rim);
+
+// === ЗАГРУЗКА МОДЕЛИ С GOOGLE DRIVE ===
+const loader = new THREE.GLTFLoader();
+loader.load(
+    "https://drive.google.com/uc?export=download&id=1fEpwUpGQJCj90IpdourJ-99hy3OqDvNb",
+    gltf=>{
+        const model = gltf.scene;
+
+        model.traverse(o=>{
+            if(o.isMesh){
+                o.material.roughness = 0.6;
+                o.material.metalness = 0.05;
+            }
+        });
+
+        model.scale.set(1.1,1.1,1.1);
+        model.rotation.y = Math.PI; // задний вид
+        model.position.y = 0;
+
+        scene.add(model);
+    },
+    undefined,
+    err=>{
+        console.error("Ошибка загрузки модели", err);
+    }
+);
+
+// === РЕНДЕР ЦИКЛ ===
+function animate(){
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene,camera);
+}
+animate();
+
+// === RESIZE ===
+window.addEventListener("resize",()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>
