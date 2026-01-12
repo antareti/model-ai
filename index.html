@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Female Anatomy — 3D Posterior View (Optimized)</title>
+<title>Female Anatomy — 3D Posterior View</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,body{
     margin:0;
     padding:0;
-    background:#0b0b0b;
     overflow:hidden;
+    background:#0b0b0b;
 }
 #info{
     position:absolute;
@@ -62,50 +62,44 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.physicallyCorrectLights = true;
 document.body.appendChild(renderer.domElement);
 
-// Управление камерой
+// Контролы
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.target.set(0,1.2,0);
 controls.enableDamping = true;
 
 // Свет
 scene.add(new THREE.AmbientLight(0xffffff,0.35));
-const key = new THREE.DirectionalLight(0xffffff,1.0);
-key.position.set(3,5,4);
-scene.add(key);
-const fill = new THREE.DirectionalLight(0xffffff,0.4);
-fill.position.set(-3,2,4);
-scene.add(fill);
-const rim = new THREE.DirectionalLight(0xffffff,0.6);
-rim.position.set(0,2,-5);
-scene.add(rim);
+const key = new THREE.DirectionalLight(0xffffff,1.0); key.position.set(3,5,4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff,0.4); fill.position.set(-3,2,4); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff,0.6); rim.position.set(0,2,-5); scene.add(rim);
 
 // Прогресс бар
 const bar = document.getElementById("bar");
 
-// Загрузка модели с Google Drive с прогрессом
+// Прямая ссылка через CORS proxy
+const glbUrl = "https://drive.google.com/uc?export=download&id=1fEpwUpGQJCj90IpdourJ-99hy3OqDvNb";
+const proxyUrl = "https://cors-anywhere.herokuapp.com/"; // публичный CORS proxy
+
+// Загрузка модели
 const loader = new THREE.GLTFLoader();
 loader.load(
-    "https://drive.google.com/uc?export=download&id=1fEpwUpGQJCj90IpdourJ-99hy3OqDvNb",
+    proxyUrl + glbUrl,
     gltf=>{
         const model = gltf.scene;
         model.traverse(o=>{
             if(o.isMesh){
                 o.material.roughness = 0.6;
                 o.material.metalness = 0.05;
-                o.castShadow = true;
-                o.receiveShadow = true;
             }
         });
         model.scale.set(1.1,1.1,1.1);
-        model.rotation.y = Math.PI; // задний вид
+        model.rotation.y = Math.PI;
         model.position.y = 0;
         scene.add(model);
 
-        // Скрываем прогресс бар
         document.getElementById("progress").style.display = "none";
     },
     xhr=>{
-        // Обновление прогресса
         if(xhr.lengthComputable){
             const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
             bar.style.width = percent + "%";
@@ -116,7 +110,7 @@ loader.load(
     }
 );
 
-// Рендер и анимация
+// Анимация
 function animate(){
     requestAnimationFrame(animate);
     controls.update();
