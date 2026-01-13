@@ -2,195 +2,129 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Imagen AI — Натурализм</title>
+<title>Offline AI Woman — One File</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
-    margin:0;
-    background:#0a0a0a;
-    color:#eaeaea;
-    font-family:Arial,sans-serif;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+  margin:0;
+  background:#0b0b0b;
+  color:#eaeaea;
+  font-family:Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
 .app{
-    width:440px;
-    background:#121212;
-    padding:20px;
-    border-radius:14px;
-    box-shadow:0 0 60px rgba(255,144,0,.15);
+  width:420px;
+  background:#121212;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 0 50px rgba(255,144,0,.2);
 }
-h1{
-    text-align:center;
-    color:#ff9000;
-}
-textarea{
-    width:100%;
-    height:80px;
-    background:#1c1c1c;
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    padding:10px;
-    resize:none;
-}
+h1{text-align:center;color:#ff9000;}
 button{
-    width:100%;
-    margin-top:12px;
-    padding:12px;
-    font-size:16px;
-    border:none;
-    border-radius:10px;
-    background:#ff9000;
-    color:#000;
-    cursor:pointer;
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:#ff9000;
+  color:#000;
+  cursor:pointer;
 }
-button:hover{background:#ffae33;}
 canvas{
-    width:100%;
-    margin-top:15px;
-    border-radius:12px;
-    background:#000;
+  width:100%;
+  margin-top:15px;
+  border-radius:12px;
+  background:#000;
 }
 .footer{
-    text-align:center;
-    font-size:11px;
-    opacity:.6;
-    margin-top:6px;
+  text-align:center;
+  font-size:11px;
+  opacity:.6;
+  margin-top:6px;
 }
 </style>
 </head>
 <body>
 
 <div class="app">
-<h1>Imagen AI · Натурализм</h1>
-<textarea id="prompt" placeholder="Пример: молодая женщина, мягкий дневной свет, реализм"></textarea>
-<button onclick="generate()">Сгенерировать портрет</button>
-<canvas id="canvas" width="512" height="512"></canvas>
-<div class="footer">Offline • Procedural realism • Без API</div>
+<h1>Offline AI · Woman</h1>
+<button onclick="generate()">Сгенерировать</button>
+<canvas id="c" width="256" height="512"></canvas>
+<div class="footer">1 файл • Offline • No API</div>
 </div>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const c = document.getElementById("c");
+const x = c.getContext("2d");
 
-function hash(str){
-    let h=0;
-    for(let i=0;i<str.length;i++){
-        h=(h<<5)-h+str.charCodeAt(i);
-        h|=0;
-    }
-    return Math.abs(h);
-}
-
-function mulberry32(a){
-    return function(){
-        let t=a+=0x6D2B79F5;
-        t=Math.imul(t^t>>>15,t|1);
-        t^=t+Math.imul(t^t>>>7,t|61);
-        return((t^t>>>14)>>>0)/4294967296;
-    }
-}
-
-function skinNoise(rand){
-    for(let i=0;i<60000;i++){
-        const x=rand()*512;
-        const y=rand()*512;
-        const v=220+rand()*25;
-        ctx.fillStyle=`rgba(${v},${v-20},${v-30},0.03)`;
-        ctx.fillRect(x,y,1,1);
-    }
-}
+function R(){return Math.random();}
+function skin(){return `rgb(${210+R()*20},${175+R()*20},${155+R()*20})`}
 
 function generate(){
-    const text=document.getElementById("prompt").value || "realistic woman portrait";
-    const rand=mulberry32(hash("female_real_"+text));
+  x.clearRect(0,0,256,512);
 
-    // Фон (студийный)
-    const grad=ctx.createRadialGradient(256,200,50,256,256,400);
-    grad.addColorStop(0,`rgb(${40+rand()*20},${40+rand()*20},${45+rand()*20})`);
-    grad.addColorStop(1,"#050505");
-    ctx.fillStyle=grad;
-    ctx.fillRect(0,0,512,512);
+  // фон
+  let g=x.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,"#222");
+  g.addColorStop(1,"#050505");
+  x.fillStyle=g;
+  x.fillRect(0,0,256,512);
 
-    // Тень головы
-    ctx.beginPath();
-    ctx.ellipse(256,280,150,190,0,0,Math.PI*2);
-    ctx.fillStyle="rgba(0,0,0,0.35)";
-    ctx.fill();
+  const cx=128;
+  const bodyY=210;
 
-    // Кожа
-    ctx.beginPath();
-    ctx.ellipse(256,260,135,175,0,0,Math.PI*2);
-    ctx.fillStyle=`rgb(${210+rand()*15},${175+rand()*15},${155+rand()*15})`;
-    ctx.fill();
+  // тело
+  x.fillStyle=skin();
+  x.beginPath();
+  x.ellipse(cx,bodyY+120,45,120,0,0,Math.PI*2);
+  x.fill();
 
-    // Градиент объёма
-    const faceLight=ctx.createRadialGradient(240,220,30,256,260,200);
-    faceLight.addColorStop(0,"rgba(255,255,255,0.35)");
-    faceLight.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle=faceLight;
-    ctx.beginPath();
-    ctx.ellipse(256,260,135,175,0,0,Math.PI*2);
-    ctx.fill();
+  // голова
+  x.beginPath();
+  x.ellipse(cx,120,42,55,0,0,Math.PI*2);
+  x.fill();
 
-    // Кожа — шум
-    skinNoise(rand);
+  // шея
+  x.fillRect(cx-12,165,24,30);
 
-    // Глаза
-    for(let i=-1;i<=1;i+=2){
-        const ex=256+i*52;
-        const ey=240+rand()*4;
-        ctx.beginPath();
-        ctx.ellipse(ex,ey,20,10,0,0,Math.PI*2);
-        ctx.fillStyle="#fff";
-        ctx.fill();
+  // руки
+  for(let s of [-1,1]){
+    x.beginPath();
+    x.ellipse(cx+s*60,bodyY+110,18,90,0,0,Math.PI*2);
+    x.fill();
+  }
 
-        ctx.beginPath();
-        ctx.arc(ex,ey,6,0,Math.PI*2);
-        ctx.fillStyle=`rgb(${80+rand()*50},${80+rand()*50},${80+rand()*50})`;
-        ctx.fill();
+  // ноги
+  for(let s of [-1,1]){
+    x.beginPath();
+    x.ellipse(cx+s*18,bodyY+270,16,110,0,0,Math.PI*2);
+    x.fill();
+  }
 
-        ctx.beginPath();
-        ctx.arc(ex,ey,3,0,Math.PI*2);
-        ctx.fillStyle="#000";
-        ctx.fill();
-    }
+  // лицо
+  x.fillStyle="#000";
+  x.beginPath();x.arc(cx-14,120,4,0,7);x.fill();
+  x.beginPath();x.arc(cx+14,120,4,0,7);x.fill();
 
-    // задница
-    ctx.beginPath();
-    ctx.moveTo(256,250);
-    ctx.lineTo(250,300);
-    ctx.lineTo(256,305);
-    ctx.strokeStyle="rgba(120,80,60,0.4)";
-    ctx.lineWidth=2;
-    ctx.stroke();
+  x.beginPath();
+  x.ellipse(cx,145,12,5,0,0,7);
+  x.fillStyle="rgba(150,60,80,.8)";
+  x.fill();
 
-    // вагина
-    ctx.beginPath();
-    ctx.ellipse(256,320,30,9,0,0,Math.PI*2);
-    ctx.fillStyle="rgba(170,80,90,0.75)";
-    ctx.fill();
+  // волосы
+  x.fillStyle="rgba(40,25,15,.95)";
+  x.beginPath();
+  x.ellipse(cx,110,60,70,0,0,7);
+  x.fill();
 
-    // Волосы
-    ctx.beginPath();
-    ctx.ellipse(256,200,170,200,0,0,Math.PI*2);
-    ctx.fillStyle=`rgba(${40+rand()*40},${30+rand()*30},${20+rand()*20},0.95)`;
-    ctx.fill();
-
-    // Волосы — текстура
-    for(let i=0;i<4000;i++){
-        ctx.fillStyle="rgba(0,0,0,0.08)";
-        ctx.fillRect(rand()*512,rand()*300,1,8);
-    }
-
-    // Мягкий шум камеры
-    for(let i=0;i<80000;i++){
-        ctx.fillStyle="rgba(255,255,255,0.008)";
-        ctx.fillRect(rand()*512,rand()*512,1,1);
-    }
+  // шум (AI-эффект)
+  for(let i=0;i<20000;i++){
+    x.fillStyle="rgba(255,255,255,0.015)";
+    x.fillRect(R()*256,R()*512,1,1);
+  }
 }
 </script>
 
