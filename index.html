@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Offline AI Woman — One File</title>
+<title>Text → Image | Offline AI Woman</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
@@ -16,15 +16,26 @@ body{
   height:100vh;
 }
 .app{
-  width:420px;
+  width:440px;
   background:#121212;
   padding:20px;
   border-radius:14px;
   box-shadow:0 0 50px rgba(255,144,0,.2);
 }
 h1{text-align:center;color:#ff9000;}
+textarea{
+  width:100%;
+  height:80px;
+  background:#1c1c1c;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+  resize:none;
+}
 button{
   width:100%;
+  margin-top:12px;
   padding:12px;
   font-size:16px;
   border:none;
@@ -50,57 +61,75 @@ canvas{
 <body>
 
 <div class="app">
-<h1>Offline AI · Woman</h1>
+<h1>Text → Image</h1>
+<textarea id="prompt" placeholder="Например: высокая женщина, тёмные волосы, реализм, мягкий свет"></textarea>
 <button onclick="generate()">Сгенерировать</button>
 <canvas id="c" width="256" height="512"></canvas>
-<div class="footer">1 файл • Offline • No API</div>
+<div class="footer">1 файл • Text-to-Image • Offline</div>
 </div>
 
 <script>
 const c = document.getElementById("c");
 const x = c.getContext("2d");
 
-function R(){return Math.random();}
-function skin(){return `rgb(${210+R()*20},${175+R()*20},${155+R()*20})`}
+function hash(str){
+  let h=0;
+  for(let i=0;i<str.length;i++){
+    h=(h<<5)-h+str.charCodeAt(i);
+    h|=0;
+  }
+  return Math.abs(h);
+}
+
+function rnd(seed){
+  return ()=> (seed=Math.imul(seed,48271)%2147483647)/2147483647;
+}
 
 function generate(){
-  x.clearRect(0,0,256,512);
+  const text=document.getElementById("prompt").value.toLowerCase();
+  const r=rnd(hash(text||"woman"));
+
+  // параметры из текста
+  const tall=text.includes("высок") ? 1.2 : 1;
+  const slim=text.includes("худ") ? 0.8 : 1;
+  const dark=text.includes("тём") ? 0.7 : 1;
+  const cyber=text.includes("кибер") ? true : false;
 
   // фон
-  let g=x.createLinearGradient(0,0,0,512);
-  g.addColorStop(0,"#222");
-  g.addColorStop(1,"#050505");
-  x.fillStyle=g;
+  let bg=x.createLinearGradient(0,0,0,512);
+  bg.addColorStop(0, cyber ? "#0a0f14" : "#222");
+  bg.addColorStop(1, "#050505");
+  x.fillStyle=bg;
   x.fillRect(0,0,256,512);
 
   const cx=128;
-  const bodyY=210;
+  const skin=`rgb(${200+r()*30},${170+r()*25},${150+r()*20})`;
 
   // тело
-  x.fillStyle=skin();
+  x.fillStyle=skin;
   x.beginPath();
-  x.ellipse(cx,bodyY+120,45,120,0,0,Math.PI*2);
+  x.ellipse(cx,240,45*slim,120*tall,0,0,7);
   x.fill();
 
   // голова
   x.beginPath();
-  x.ellipse(cx,120,42,55,0,0,Math.PI*2);
+  x.ellipse(cx,120,40,55,0,0,7);
   x.fill();
 
   // шея
-  x.fillRect(cx-12,165,24,30);
+  x.fillRect(cx-10,165,20,30);
 
   // руки
   for(let s of [-1,1]){
     x.beginPath();
-    x.ellipse(cx+s*60,bodyY+110,18,90,0,0,Math.PI*2);
+    x.ellipse(cx+s*60,260,18,90*tall,0,0,7);
     x.fill();
   }
 
   // ноги
   for(let s of [-1,1]){
     x.beginPath();
-    x.ellipse(cx+s*18,bodyY+270,16,110,0,0,Math.PI*2);
+    x.ellipse(cx+s*18,380,16,120*tall,0,0,7);
     x.fill();
   }
 
@@ -108,22 +137,29 @@ function generate(){
   x.fillStyle="#000";
   x.beginPath();x.arc(cx-14,120,4,0,7);x.fill();
   x.beginPath();x.arc(cx+14,120,4,0,7);x.fill();
-
   x.beginPath();
   x.ellipse(cx,145,12,5,0,0,7);
   x.fillStyle="rgba(150,60,80,.8)";
   x.fill();
 
   // волосы
-  x.fillStyle="rgba(40,25,15,.95)";
+  x.fillStyle=dark<1 ? "rgba(30,20,10,.95)" : "rgba(120,80,50,.9)";
   x.beginPath();
   x.ellipse(cx,110,60,70,0,0,7);
   x.fill();
 
-  // шум (AI-эффект)
-  for(let i=0;i<20000;i++){
-    x.fillStyle="rgba(255,255,255,0.015)";
-    x.fillRect(R()*256,R()*512,1,1);
+  // кибер-эффект
+  if(cyber){
+    for(let i=0;i<4000;i++){
+      x.fillStyle="rgba(0,255,255,0.05)";
+      x.fillRect(r()*256,r()*512,1,2);
+    }
+  }
+
+  // шум
+  for(let i=0;i<15000;i++){
+    x.fillStyle="rgba(255,255,255,0.01)";
+    x.fillRect(r()*256,r()*512,1,1);
   }
 }
 </script>
